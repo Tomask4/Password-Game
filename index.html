@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Password Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .progress-container {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            width: 0%;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+        
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .progress-text {
+            margin-top: 10px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .game-area {
+            padding: 30px;
+        }
+        
+        .password-container {
+            margin-bottom: 30px;
+        }
+        
+        .password-input {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.2em;
+            border: 3px solid #e9ecef;
+            border-radius: 12px;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            margin-bottom: 15px;
+        }
+        
+        .password-input:focus {
+            border-color: #4ecdc4;
+            background: white;
+            box-shadow: 0 0 20px rgba(78, 205, 196, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .password-input:disabled {
+            background: #e9ecef;
+            border-color: #44a08d;
+            color: #495057;
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+        
+        .password-strength {
+            display: inline-block;
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 1em;
+            text-align: center;
+            min-width: 100px;
+        }
+        
+        .strength-weak { background: #ff6b6b; color: white; }
+        .strength-medium { background: #ffd93d; color: #333; }
+        .strength-strong { background: #4ecdc4; color: white; }
+        .strength-perfect { background: #44a08d; color: white; }
+        
+        .rules-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .rule {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .rule::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #e9ecef;
+            transition: background 0.3s ease;
+        }
+        
+        .rule.satisfied {
+            border-color: #4ecdc4;
+            background: #f0fdfc;
+            transform: translateX(5px);
+        }
+        
+        .rule.satisfied::before {
+            background: #4ecdc4;
+        }
+        
+        .rule.failed {
+            border-color: #ff6b6b;
+            background: #fff5f5;
+            animation: shake 0.5s ease;
+        }
+        
+        .rule.failed::before {
+            background: #ff6b6b;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .rule-number {
+            font-weight: 800;
+            font-size: 1.3em;
+            color: #495057;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .rule-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e9ecef;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .rule.satisfied .rule-icon {
+            background: #4ecdc4;
+            color: white;
+        }
+        
+        .rule.failed .rule-icon {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .rule-text {
+            font-size: 1.1em;
+            color: #6c757d;
+            line-height: 1.5;
+        }
+        
+        .hint {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #868e96;
+            font-style: italic;
+        }
+        
+        .completion-message {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 30px;
+            display: none;
+            animation: celebration 1s ease;
+        }
+        
+        @keyframes celebration {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .completion-message h2 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        
+        .stat-text {
+            font-size: 1em;
+        }
+
+        .stat-label {
+            opacity: 0.8;
+        }
+        
+        .reset-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .current-time {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #4ecdc4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 The Ultimate Password Game</h1>
+            <p class="subtitle">Can you create a password that satisfies all the rules?</p>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Start typing to see the first rule!</div>
+        </div>
+        
+        <div class="game-area">
+            <div class="password-container">
+                <input type="text" id="passwordInput" class="password-input" 
+                       placeholder="Start typing your password here..." maxlength="200">
+                <div id="strengthIndicator" class="password-strength"></div>
+            </div>
+            
+            <div class="rules-container" id="rulesContainer">
+                <!-- Rules will be populated by JavaScript -->
+            </div>
+            
+            <div id="completionMessage" class="completion-message">
+                <h2>🎉 Congratulations!</h2>
+                <p>You have successfully completed all the rules!</p>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-number" id="finalLength">0</div>
+                        <div class="stat-label">characters</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number" id="timeSpent">0</div>
+                        <div class="stat-label">seconds</div>
+                    </div>
+                </div>
+                <br>
+                <div class="stat">
+                    <div class="stat-text" id="passwordfinal">ww</div>
+                    <div class="stat-label">Password</div>
+                </div>
+                <button class="reset-btn" onclick="resetGame()">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let startTime = Date.now();
+        let currentTime = new Date();
+        let gameCompleted = false;
+        let timeInterval;
+        
+        // Start the time interval
+        function startTimeInterval() {
+            if (timeInterval) clearInterval(timeInterval);
+            timeInterval = setInterval(() => {
+                if (!gameCompleted) {
+                    currentTime = new Date();
+                    checkAllRules();
+                }
+            }, 1000);
+        }
+        
+        // Stop the time interval
+        function stopTimeInterval() {
+            if (timeInterval) {
+                clearInterval(timeInterval);
+                timeInterval = null;
+            }
+        }
+
+        const rules = [
+            // EASY RULES (1-10) - Basic requirements
+            {
+                text: "Your password must be at least 5 characters long",
+                check: (password) => password.length >= 5,
+                hint: "Just type more characters!"
+            },
+            {
+                text: "Your password must include a lowercase letter",
+                check: (password) => /[a-z]/.test(password),
+                hint: "Try a, b, c, etc."
+            },
+            {
+                text: "Your password must include an uppercase letter",
+                check: (password) => /[A-Z]/.test(password),
+                hint: "Try A, B, C, etc."
+            },
+            {
+                text: "Your password must include a number",
+                check: (password) => /\d/.test(password),
+                hint: "Add a digit like 1, 2, 3..."
+            },
+            {
+                text: "Your password must be at least 8 characters long",
+                check: (password) => password.length >= 8,
+                hint: "Keep typing!"
+            },
+            {
+                text: "Your password must include a special character (!@#$%)",
+                check: (password) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+                hint: "Try !, @, #, $, % or another symbol"
+            },
+            {
+                text: "Your password must be at least 12 characters long",
+                check: (password) => password.length >= 12,
+                hint: "Your password is getting longer!"
+            },
+            {
+                text: "Your password must include a vowel (a, e, i, o, u)",
+                check: (password) => /[aeiouAEIOU]/.test(password),
+                hint: "Add a, e, i, o, or u"
+            },
+            {
+                text: "Your password must include a consonant",
+                check: (password) => /[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ]/.test(password),
+                hint: "Add any letter that's not a vowel"
+            },
+            {
+                text: "Your password must include two numbers",
+                check: (password) => (password.match(/\d/g) || []).length >= 2,
+                hint: "Add another digit!"
+            },
+
+            // MEDIUM RULES (11-25) - Getting trickier
+            {
+                text: "Your password must include at least 3 numbers",
+                check: (password) => (password.match(/\d/g) || []).length >= 3,
+                hint: "Add more digits to your password"
+            },
+            {
+                text: "Your password must include a day of the week",
+                check: (password) => {
+                    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
+                                 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+                    return days.some(day => password.toLowerCase().includes(day));
+                },
+                hint: "Add a day like 'monday' or 'fri'"
+            },
+            {
+                text: "Your password must include a month name",
+                check: (password) => {
+                    const months = ['january', 'february', 'march', 'april', 'may', 'june',
+                                   'july', 'august', 'september', 'october', 'november', 'december',
+                                   'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+                    return months.some(month => password.toLowerCase().includes(month));
+                },
+                hint: "Add a month like 'january' or 'dec'"
+            },
+            {
+                text: "Your password must include a color",
+                check: (password) => {
+                    const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink',
+                                   'black', 'white', 'gray', 'brown', 'violet', 'indigo', 'cyan'];
+                    return colors.some(color => password.toLowerCase().includes(color));
+                },
+                hint: "Try 'red', 'blue', 'green', etc."
+            },
+            {
+                text: "Your password must include an animal",
+                check: (password) => {
+                    const animals = ['cat', 'dog', 'fish', 'bird', 'mouse', 'bear', 'lion',
+                                   'tiger', 'elephant', 'monkey', 'horse', 'cow', 'pig'];
+                    return animals.some(animal => password.toLowerCase().includes(animal));
+                },
+                hint: "Add an animal like 'cat', 'dog', 'lion', etc."
+            },
+            {
+                text: "Your password must not contain the word 'password'",
+                check: (password) => !password.toLowerCase().includes('password'),
+                hint: "Avoid using 'password' in any form"
+            },
+            {
+                text: "Your password must include a Roman numeral",
+                check: (password) => /[IVXLCDM]+/i.test(password),
+                hint: "Try I, II, III, IV, V, X, etc."
+            },
+            {
+                text: "Your password must include three vowels",
+                check: (password) => (password.match(/[aeiouAEIOU]/g) || []).length >= 3,
+                hint: "Add more a, e, i, o, u letters"
+            },
+            {
+                text: "Your password must be at least 16 characters long",
+                check: (password) => password.length >= 16,
+                hint: "Keep adding more content!"
+            },
+            {
+                text: "Your password must include a food item",
+                check: (password) => {
+                    const foods = ['pizza', 'burger', 'apple', 'banana', 'bread', 'cake', 'cheese',
+                                  'chicken', 'fish', 'rice', 'pasta', 'soup', 'salad', 'cookie'];
+                    return foods.some(food => password.toLowerCase().includes(food));
+                },
+                hint: "Add food like 'pizza', 'apple', 'bread', etc."
+            },
+            {
+                text: "The digits in your password must add up to 25",
+                check: (password) => {
+                    const numbers = password.match(/\d/g);
+                    if (!numbers) return false;
+                    const sum = numbers.reduce((acc, num) => acc + parseInt(num), 0);
+                    return sum === 25;
+                },
+                hint: "Adjust your digits to sum to 25"
+            },
+            {
+                text: "Your password must include a country name",
+                check: (password) => {
+                    const countries = ['usa', 'uk', 'france', 'germany', 'italy', 'spain', 'canada',
+                                     'japan', 'china', 'india', 'brazil', 'mexico', 'russia'];
+                    return countries.some(country => password.toLowerCase().includes(country));
+                },
+                hint: "Add a country like 'usa', 'france', 'japan', etc."
+            },
+            {
+                text: "Your password must include a verb",
+                check: (password) => {
+                    const verbs = ['run', 'jump', 'walk', 'eat', 'sleep', 'play', 'work', 'dance',
+                                  'sing', 'read', 'write', 'drive', 'fly', 'swim', 'laugh'];
+                    return verbs.some(verb => password.toLowerCase().includes(verb));
+                },
+                hint: "Add an action word like 'run', 'jump', 'dance'"
+            },
+            {
+                text: "Your password must contain at least 4 different special characters",
+                check: (password) => {
+                    const specials = password.match(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/g);
+                    if (!specials) return false;
+                    const unique = [...new Set(specials)];
+                    return unique.length >= 4;
+                },
+                hint: "Use 4 different symbols like !@#$"
+            },
+
+            // HARD RULES (26-40) - Much more challenging
+            {
+                text: "Your password must include the current time (HH:MM)",
+                check: (password) => {
+                    const timeStr = currentTime.getHours().toString().padStart(2, '0') + 
+                                   ':' + currentTime.getMinutes().toString().padStart(2, '0');
+                    return password.includes(timeStr);
+                },
+                hint: `Add current time: <span class="current-time">${currentTime.getHours().toString().padStart(2, '0')}:${currentTime.getMinutes().toString().padStart(2, '0')}</span>`
+            },
+            {
+                text: "Your password must contain exactly 3 emojis",
+                check: (password) => {
+                    const emojiRegex = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu;
+                    const matches = password.match(emojiRegex);
+                    return matches && matches.length === 3;
+                },
+                hint: "Change to exactly 3 emojis like 🔥😊🎉"
+            },
+            {
+                text: "The length of your password must be a prime number",
+                check: (password) => {
+                    const length = password.length;
+                    if (length < 2) return false;
+                    for (let i = 2; i < length; i++) {
+                        if (length % i === 0) return false;
+                    }
+                    return length > 1;
+                },
+                hint: "Make length 17, 19, 23, 29, 31... characters"
+            },
+            {
+                text: "Your password must include a programming language",
+                check: (password) => {
+                    const languages = ['java', 'python', 'javascript', 'html', 'css', 'php',
+                                     'ruby', 'swift', 'kotlin', 'rust', 'go', 'sql'];
+                    return languages.some(lang => password.toLowerCase().includes(lang));
+                },
+                hint: "Add 'python', 'java', 'javascript', etc."
+            },
+            {
+                text: "Your password must contain a mathematical operation (+, -, *, /)",
+                check: (password) => /[+\-*/]/.test(password),
+                hint: "Add +, -, *, or /"
+            },
+            {
+                text: "Your password must include a chemical element",
+                check: (password) => {
+                    const elements = ['hydrogen', 'helium', 'carbon', 'oxygen', 'iron', 'gold',
+                                    'silver', 'copper', 'zinc', 'sodium', 'calcium', 'h', 'he', 'c', 'o', 'fe', 'au', 'ag'];
+                    return elements.some(element => password.toLowerCase().includes(element));
+                },
+                hint: "Add an element like 'carbon', 'iron', 'gold'"
+            },
+            {
+                text: "Your password must include a planet name",
+                check: (password) => {
+                    const planets = ['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
+                    return planets.some(planet => password.toLowerCase().includes(planet));
+                },
+                hint: "Add 'mars', 'jupiter', 'saturn', etc."
+            },
+            {
+                text: "Your password must contain at least 5 uppercase letters",
+                check: (password) => (password.match(/[A-Z]/g) || []).length >= 5,
+                hint: "Add more capital letters"
+            },
+            {
+                text: "Your password must be at least 25 characters long",
+                check: (password) => password.length >= 25,
+                hint: "Keep expanding your password!"
+            },
+            {
+                text: "Your password must include a chess piece",
+                check: (password) => {
+                    const pieces = ['king', 'queen', 'rook', 'bishop', 'knight', 'pawn'];
+                    return pieces.some(piece => password.toLowerCase().includes(piece));
+                },
+                hint: "Add 'king', 'queen', 'rook', 'bishop', 'knight', or 'pawn'"
+            },
+            {
+                text: "Your password must contain a word that is exactly 7 letters long",
+                check: (password) => {
+                    const words = password.split(/[^a-zA-Z]+/).filter(word => word.length > 0);
+                    return words.some(word => word.length === 7);
+                },
+                hint: "Include a 7-letter word like 'amazing', 'perfect'"
+            },
+            {
+                text: "Your password must include a musical instrument",
+                check: (password) => {
+                    const instruments = ['piano', 'guitar', 'drums', 'violin', 'flute', 'trumpet',
+                                       'saxophone', 'bass', 'organ', 'harp'];
+                    return instruments.some(instr => password.toLowerCase().includes(instr));
+                },
+                hint: "Add 'piano', 'guitar', 'drums', etc."
+            },
+
+            // EXTREME RULES (41-50) - Nearly impossible
+            {
+                text: "Your password must end with exactly '!?!'",
+                check: (password) => password.endsWith('!?!'),
+                hint: "End your password with !?!"
+            },
+            {
+                text: "Your password must include a mythological creature",
+                check: (password) => {
+                    const creatures = ['dragon', 'phoenix', 'unicorn', 'griffin', 'hydra', 'kraken',
+                                     'minotaur', 'centaur', 'pegasus', 'sphinx'];
+                    return creatures.some(creature => password.toLowerCase().includes(creature));
+                },
+                hint: "Add 'dragon', 'phoenix', 'unicorn', etc."
+            },
+            {
+                text: "The first and last characters must be the same",
+                check: (password) => password.length > 0 && password[0] === password[password.length - 1],
+                hint: "Start and end with the same character (but remember the !?! rule!)"
+            },
+            {
+                text: "Your password must include a superhero name",
+                check: (password) => {
+                    const heroes = ['batman', 'superman', 'spiderman', 'ironman', 'hulk', 'thor',
+                                   'flash', 'wonder', 'aquaman', 'captain'];
+                    return heroes.some(hero => password.toLowerCase().includes(hero));
+                },
+                hint: "Add 'batman', 'superman', 'flash', etc."
+            },
+            {
+                text: "Your password must contain at least 3 Roman numerals",
+                check: (password) => {
+                    const romans = password.match(/[IVXLCDM]+/gi) || [];
+                    return romans.length >= 3;
+                },
+                hint: "Include 3+ Roman numerals like I, V, X"
+            },
+            {
+                text: "Your password must include a palindrome (3+ letters)",
+                check: (password) => {
+                    for (let i = 0; i <= password.length - 3; i++) {
+                        for (let len = 3; len <= password.length - i; len++) {
+                            const substr = password.substr(i, len);
+                            if (substr === substr.split('').reverse().join('') && /^[a-zA-Z]{3,}$/.test(substr)) {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                },
+                hint: "Include a word that reads same forwards/backwards like 'mom', 'dad', 'level'"
+            },
+            {
+                text: "Your password must contain the Fibonacci sequence: 1123",
+                check: (password) => password.includes('1123'),
+                hint: "Add the Fibonacci sequence: 1123"
+            }
+        ];
+
+        function checkAllRules() {
+            const password = document.getElementById('passwordInput').value;
+            const rulesContainer = document.getElementById('rulesContainer');
+            
+            // Clear existing rules
+            rulesContainer.innerHTML = '';
+            
+            if (password.length === 0) {
+                // No password entered, show no rules
+                document.getElementById('progressFill').style.width = '0%';
+                document.getElementById('progressText').textContent = 'Start typing to see the first rule!';
+                document.getElementById('strengthIndicator').textContent = '';
+                document.getElementById('strengthIndicator').className = 'password-strength';
+                return;
+            }
+            
+            let satisfiedCount = 0;
+            let rulesToShow = 1; // Always show at least the first rule
+            
+            // First pass: determine how many rules to show
+            for (let i = 0; i < rules.length; i++) {
+                const satisfied = rules[i].check(password);
+                if (satisfied) {
+                    satisfiedCount++;
+                    if (i + 1 === rulesToShow) {
+                        rulesToShow++; // Unlock next rule
+                    }
+                }
+            }
+            
+            // Get rules to display (only up to rulesToShow)
+            const rulesToDisplay = rules.slice(0, rulesToShow);
+            
+            // Separate satisfied and unsatisfied rules
+            const unsatisfiedRules = [];
+            const satisfiedRules = [];
+            
+            rulesToDisplay.forEach((rule, index) => {
+                const satisfied = rule.check(password);
+                const ruleData = { rule, index, satisfied };
+                
+                if (satisfied) {
+                    satisfiedRules.push(ruleData);
+                } else {
+                    unsatisfiedRules.push(ruleData);
+                }
+            });
+            
+            // Display unsatisfied rules first, then satisfied rules
+            const orderedRules = [...unsatisfiedRules, ...satisfiedRules];
+            
+            orderedRules.forEach(({ rule, index, satisfied }) => {
+                const ruleDiv = document.createElement('div');
+                ruleDiv.className = 'rule';
+                
+                if (satisfied) {
+                    ruleDiv.classList.add('satisfied');
+                } else {
+                    ruleDiv.classList.add('failed');
+                }
+                
+                ruleDiv.innerHTML = `
+                    <div class="rule-number">
+                        Rule ${index + 1}
+                        <div class="rule-icon">${satisfied ? '✓' : '✗'}</div>
+                    </div>
+                    <div class="rule-text">${rule.text}</div>
+                    <div class="hint">${rule.hint}</div>
+                `;
+                
+                rulesContainer.appendChild(ruleDiv);
+            });
+            
+            // Update progress based on total rules, not just visible ones
+            const progressPercent = (satisfiedCount / rules.length) * 100;
+            document.getElementById('progressFill').style.width = progressPercent + '%';
+            document.getElementById('progressText').textContent = 
+                `${satisfiedCount} of ${rules.length} rules completed (${rulesToShow - 1} unlocked)`;
+            
+            // Update password strength
+            updatePasswordStrength(password, satisfiedCount);
+            
+            // Check if all rules are satisfied
+            if (satisfiedCount === rules.length && password.length > 0 && !gameCompleted) {
+                gameCompleted = true;
+                stopTimeInterval(); // Stop the timer when game is completed
+                showCompletion(password);
+            } else if (satisfiedCount < rules.length) {
+                // If we no longer satisfy all rules, restart the game state
+                if (gameCompleted) {
+                    gameCompleted = false;
+                    document.getElementById('completionMessage').style.display = 'none';
+                    startTimeInterval(); // Restart timer
+                }
+            }
+        }
+
+        function updatePasswordStrength(password, satisfiedCount) {
+            const strengthIndicator = document.getElementById('strengthIndicator');
+            const percentage = (satisfiedCount / rules.length) * 100;
+            
+            if (percentage === 100) {
+                strengthIndicator.textContent = 'PERFECT!';
+                strengthIndicator.className = 'password-strength strength-perfect';
+            } else if (percentage >= 75) {
+                strengthIndicator.textContent = 'Strong';
+                strengthIndicator.className = 'password-strength strength-strong';
+            } else if (percentage >= 50) {
+                strengthIndicator.textContent = 'Medium';
+                strengthIndicator.className = 'password-strength strength-medium';
+            } else if (password.length > 0) {
+                strengthIndicator.textContent = 'Weak';
+                strengthIndicator.className = 'password-strength strength-weak';
+            } else {
+                strengthIndicator.textContent = '';
+                strengthIndicator.className = 'password-strength';
+            }
+        }
+
+        function showCompletion(password) {
+            const completionMessage = document.getElementById('completionMessage');
+            const passwordInput = document.getElementById('passwordInput');
+            const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+            
+            // Disable the password input when completed
+            passwordInput.disabled = true;
+            
+            document.getElementById('finalLength').textContent = password.length;
+            document.getElementById('timeSpent').textContent = timeSpent;
+            document.getElementById('passwordfinal').textContent = password;
+            
+            completionMessage.style.display = 'block';
+            completionMessage.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetGame() {
+            const passwordInput = document.getElementById('passwordInput');
+            
+            passwordInput.value = '';
+            passwordInput.disabled = false; // Re-enable the input
+            document.getElementById('completionMessage').style.display = 'none';
+            gameCompleted = false;
+            startTime = Date.now();
+            currentTime = new Date();
+            startTimeInterval(); // Restart the timer
+            checkAllRules();
+        }
+
+        // Initialize the game
+        document.getElementById('passwordInput').addEventListener('input', checkAllRules);
+        
+        // Start the initial timer
+        startTimeInterval();
+        checkAllRules();
+    </script>
+</body>
+</html>
